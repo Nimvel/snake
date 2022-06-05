@@ -17,32 +17,40 @@ apple.src = "images/apple.png"
 const fireworks = new Image();
 fireworks.src = "images/fireworks.png"
 
-let foodSize = 25;
+let appleHeight = 25;
+let appleWidth = 25;
 let food = {
     x: Math.floor(Math.random() * (canvas.width - 100)) + 50,
     y: 0
     // y: Math.floor(Math.random() * (canvas.height - 100)) + 50
 };
 
-let dangerSize = 35;
+// let dangerSize = 35;
+let dangerHeight = 45;
+let dangerWidth = 15;
 let danger = {
     x: Math.floor(Math.random() * (canvas.width - 100)) + 50,
     y: canvas.height
 };
 
-let snakePartR = 10;
 let snake = [];
 snake[0] = {
     x: canvas.width / 2,
-    y: canvas.height / 2
+    y: canvas.height / 2,
+    r: 15
 };
 let snakeX = snake[0].x;
 let snakeY = snake[0].y;
+let snakeR = snake[0].r;
+
+let startOfTail = 5;
+let tail = [];
 
 let score = 0;
 let lives = 3;
 
-let speed = 3;
+let direction = "stop";
+let speed = 6;
 let speedFoodAndDanger = 1;
 
 let rightPressed = false;
@@ -58,63 +66,87 @@ document.addEventListener("keyup", keyUpHandler, false);
 function keyDownHandler(e) {
     if (e.keyCode == 37 || e.keyCode == 65) {
         leftPressed = true;
+        upPressed = false;
+        rightPressed = false;
+        downPressed = false;
     }
     else if (e.keyCode == 38 || e.keyCode == 87) {
+        leftPressed = false;
         upPressed = true;
+        rightPressed = false;
+        downPressed = false;
     }
     else if (e.keyCode == 39 || e.keyCode == 68) {
+        leftPressed = false;
+        upPressed = false;
         rightPressed = true;
+        downPressed = false;
     }
     else if (e.keyCode == 40 || e.keyCode == 83) {
+        leftPressed = false;
+        upPressed = false;
+        rightPressed = false;
         downPressed = true;
     }
 }
 
 function keyUpHandler(e) {
-    isMoving = false;
-    if (e.keyCode == 37 || e.keyCode == 65) {
-        leftPressed = false;
-        isMoving = false;
-    }
-    else if (e.keyCode == 38 || e.keyCode == 87) {
-        upPressed = false;
-        isMoving = false;
-    }
-    else if (e.keyCode == 39 || e.keyCode == 68) {
-        rightPressed = false;
-        isMoving = false;
-    }
-    else if (e.keyCode == 40 || e.keyCode == 83) {
-        downPressed = false;
-        isMoving = false;
-    }
+    // if (e.keyCode == 37 || e.keyCode == 65) {
+    //     leftPressed = false;
+    //     isMoving = false;
+    // }
+    // else if (e.keyCode == 38 || e.keyCode == 87) {
+    //     upPressed = false;
+    //     isMoving = false;
+    // }
+    // else if (e.keyCode == 39 || e.keyCode == 68) {
+    //     rightPressed = false;
+    //     isMoving = false;
+    // }
+    // else if (e.keyCode == 40 || e.keyCode == 83) {
+    //     downPressed = false;
+    //     isMoving = false;
+    // }
 }
 
 function traffic() {
-    if (rightPressed) {
-        snakeX += speed;
-        if (snakeX + snakePartR > canvas.width) {
-            snakeX = canvas.width - snakePartR;
-        }
+
+    upPressed ? direction = "up" : downPressed ? direction = "down" : rightPressed ? direction = "right" : leftPressed ? direction = "left" : direction = "stop";
+
+    switch (direction) {
+        case "right":
+            snakeX += speed;
+            snakeY += Math.sin(snakeX);
+            if (snakeX > canvas.width) {
+                snakeX = 0;
+            }
+            break;
+
+        case "left":
+            snakeX -= speed;
+            snakeY += Math.sin(snakeX);
+            if (snakeX < 0) {
+                snakeX = canvas.width;
+            }
+            break;
+
+        case "up":
+            snakeY -= speed;
+            snakeX += Math.sin(snakeY);
+            if (snakeY < 0) {
+                snakeY = canvas.height;
+            }
+            break;
+
+        case "down":
+            snakeY += speed;
+            snakeX += Math.sin(snakeY);
+            if (snakeY > canvas.height) {
+                snakeY = 0;
+            }
+            break;
     }
-    else if (leftPressed) {
-        snakeX -= speed;
-        if (snakeX < 0) {
-            snakeX = 0;
-        }
-    }
-    else if (upPressed) {
-        snakeY -= speed;
-        if (snakeY < 0) {
-            snakeY = 0;
-        }
-    }
-    else if (downPressed) {
-        snakeY += speed;
-        if (snakeY + snakePartR > canvas.height) {
-            snakeY = canvas.height - snakePartR;
-        }
-    }
+
     food.y += speedFoodAndDanger;
     danger.y -= speedFoodAndDanger;
 
@@ -137,18 +169,11 @@ function traffic() {
 //     let relativeX = e.clientX - canvas.offsetLeft; //e.clientX - горизонтальное положение мыши в окне просмотра, canvas.offsetLeft - расстояние между левым краем холста и левым краем окна просмотра
 //     let relativeY = e.clientY - canvas.offsetTop; 
 //     if (relativeX > 0 && relativeX < canvas.width) {
-//         snakeX = relativeX - snakePartR / 2;
+//         snakeX = relativeX - snakeR / 2;
 //     }
 //     if (relativeY > 0 && relativeY < canvas.height) {
-//         snakeY = relativeY - snakePartR / 2;
+//         snakeY = relativeY - snakeR / 2;
 //     }
-// }
-
-// function foodDrop() {
-//     ctx.drawImage(apple, food.x, food.y, foodSize, foodSize);
-//     // if (food.y + fy < canvas.height) {
-//     //     fy += fy;
-//     // }
 // }
 
 function drawScore() {
@@ -163,23 +188,48 @@ function drawLives() {
     ctx.fillText("Lives: " + lives, canvas.width - 65, 20);
 }
 
-function drawSnake(i) {
-    ctx.beginPath();
-    ctx.arc(snake[i].x, snake[i].y, snakePartR, 0, Math.PI * 2, false);
-    ctx.fillStyle = "white";
-    ctx.fill();
-    ctx.closePath();
+function initSnake() {
+    for (i = 0; i < 5; i++) {
+        snake.push()
+    }
+}
+
+function drawSnake() {
+    for (let i = 0; i < snake.length; i++) {
+        // if (i >= snake.length - 6 && i < snake.length) {
+        //     // if (i > snake.length - 6 && i < snake.length) {
+        //     ctx.beginPath();
+        //     ctx.arc(snake[i].x, snake[i].y, snake[i].r, 0, Math.PI * 2, false)
+        //     ctx.fillStyle = "white";
+        //     ctx.srtokeStyle = "black";
+        //     ctx.fill();
+        //     ctx.stroke();
+        //     ctx.closePath();
+                
+        // }
+        // else {
+            ctx.beginPath();
+                ctx.arc(snake[i].x, snake[i].y, snake[i].r, 0, Math.PI * 2, false)
+                ctx.fillStyle = "white";
+                ctx.srtokeStyle = "black";
+                ctx.fill();
+                // ctx.stroke();
+                ctx.closePath();
+        // }
+    }
 };
 
 function collision(head, arr) {
-    let tail = arr.slice(3);
 
-    if (snakeX >= food.x && snakeX <= food.x + foodSize
-        && snakeY >= food.y && snakeY <= food.y + foodSize
-        || snakeX + snakePartR >= food.x && snakeX + snakePartR <= food.x + foodSize
-        && snakeY + snakePartR >= food.y && snakeY + snakePartR <= food.y + foodSize) {
+    let tail = arr.slice(startOfTail);
+
+    if (snakeX >= food.x && snakeX <= food.x + appleWidth
+        && snakeY >= food.y && snakeY <= food.y + appleHeight
+        || snakeX + snakeR >= food.x && snakeX + snakeR <= food.x + appleWidth
+        && snakeY + snakeR >= food.y && snakeY + snakeR <= food.y + appleHeight) {
         score++;
-        if (score === 5) {
+        snakeR += 5;
+        if (score / 5 === 0) {
             speed++;
             speedFoodAndDanger++;
         }
@@ -189,13 +239,14 @@ function collision(head, arr) {
         };
     }
     else {
-        snake.shift();
+        snakeR = 15;
+        snake.pop();
     }
 
-    if (snakeX >= danger.x && snakeX <= danger.x + foodSize
-        && snakeY >= danger.y && snakeY <= danger.y + foodSize
-        || snakeX + snakePartR >= danger.x && snakeX + snakePartR <= danger.x + foodSize
-        && snakeY + snakePartR >= danger.y && snakeY + snakePartR <= danger.y + foodSize) {
+    if (snakeX >= danger.x && snakeX <= danger.x + dangerWidth
+        && snakeY >= danger.y && snakeY <= danger.y + dangerHeight
+        || snakeX + snakeR >= danger.x && snakeX + snakeR <= danger.x + dangerWidth
+        && snakeY + snakeR >= danger.y && snakeY + snakeR <= danger.y + dangerHeight) {
         lives--;
         if (!lives) {
             alert("GAME OVER");
@@ -208,20 +259,15 @@ function collision(head, arr) {
     }
 
     for (let i = 0; i < tail.length; i++) {
-        let scoreLoss = arr.splice(i, tail.length - 1).length;
-        // let scoreLoss = arr.splice(i, tail.length - 1).length;
-        //  if (head.x === tail[i].x && head.y === tail[i].y) {
-        // tailLoss(i, arr);
+        // if (head.x === tail[i].x && head.y === tail[i].y) {
+        //     arr.splice(arr[i + startOfTail], arr.length - 1)
         // }
-        if (tail[i].x >= danger.x && tail[i].x <= danger.x + foodSize
-            && tail[i].y >= danger.y && tail[i].y <= danger.y + foodSize
-            || tail[i].x + snakePartR >= danger.x && tail[i].x + snakePartR <= danger.x + foodSize
-            && tail[i].y + snakePartR >= danger.y && tail[i].y + snakePartR <= danger.y + foodSize) {
-                arr.splice(3, tail.length - 1);
-                score -= scoreLoss;
-            // arr.splice(3, tail.length - 1);
-            // score -= scoreLoss;
-
+        if (tail[i].x >= danger.x && tail[i].x <= danger.x + dangerWidth
+            && tail[i].y >= danger.y && tail[i].y <= danger.y + dangerHeight
+            || tail[i].x + snakeR >= danger.x && tail[i].x + snakeR <= danger.x + dangerWidth
+            && tail[i].y + snakeR >= danger.y && tail[i].y + snakeR <= danger.y + dangerHeight) {
+            arr.splice(arr[i], arr.length - 1);
+            score -= arr.splice(arr[i], arr.length - 1).length;
             danger = {
                 x: Math.floor(Math.random() * (canvas.width - 100) + 50),
                 y: 0
@@ -233,25 +279,25 @@ function collision(head, arr) {
 function update() {
     let newsnakeHeadC = {
         x: snakeX,
-        y: snakeY
+        y: snakeY,
+        r: snakeR
     };
-    snake.push(newsnakeHeadC);
+    snake.unshift(newsnakeHeadC);
 
     traffic();
+
     collision(newsnakeHeadC, snake);
 };
 
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
-    ctx.drawImage(apple, food.x, food.y, foodSize, foodSize);
-    ctx.drawImage(fireworks, danger.x, danger.y, dangerSize, dangerSize);
+    ctx.drawImage(apple, food.x, food.y, appleWidth, appleHeight);
+    ctx.drawImage(fireworks, danger.x, danger.y, dangerWidth, dangerHeight);
 
     drawScore();
     drawLives();
-    for (let i = 0; i < snake.length; i++) {
-        drawSnake(i);
-    }
+    drawSnake();
 };
 
 function drawGame() {
@@ -260,5 +306,4 @@ function drawGame() {
     requestAnimationFrame(drawGame);
 }
 
-// let interval = setInterval(drawGame, 100)
 drawGame();
